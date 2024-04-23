@@ -7,7 +7,7 @@ const TodoList = require("./lib/todolist");
 const Todo = require("./lib/todo");
 const { sortTodoLists, sortTodos } = require("./lib/sort");
 const store = require("connect-loki");
-
+const seedData = require("./lib/seed-data");
 const app = express();
 const host = "localhost";
 const port = 3001;
@@ -37,6 +37,7 @@ app.use(flash());
 
 // Set up persistent session data
 app.use((req, res, next) => {
+  if (!"todoLists" in req.session) req.session.todoLists = seedData;
   let todoLists = [];
   if ("todoLists" in req.session) {
     req.session.todoLists.forEach(todoList => {
@@ -78,6 +79,7 @@ app.get("/", (req, res) => {
 
 // Render the list of todo lists
 app.get("/lists", (req, res) => {
+  console.log("In the LISTS route", req.session.todoLists);
   res.render("lists", {
     todoLists: sortTodoLists(req.session.todoLists),
   });
@@ -114,6 +116,7 @@ app.post("/lists",
       });
     } else {
       req.session.todoLists.push(new TodoList(req.body.todoListTitle));
+      console.log("THE TODOLIST ARRAY", req.session.todoLists);
       req.flash("success", "The todo list has been created.");
       res.redirect("/lists");
     }
