@@ -5,14 +5,13 @@ const session = require("express-session");
 const { body, validationResult } = require("express-validator");
 const TodoList = require("./lib/todolist");
 const Todo = require("./lib/todo");
-const { sortTodoLists, sortTodos } = require("./lib/sort");
+const {sortTodos } = require("./lib/sort");
 const store = require("connect-loki");
-const seedData = require("./lib/seed-data");
 const app = express();
 const host = "localhost";
 const port = 3001;
 const LokiStore = store(session);
-
+const SessionPersistence = require("./lib/session-persistence.js");
 app.set("views", "./views");
 app.set("view engine", "pug");
 
@@ -36,8 +35,8 @@ app.use(session({
 app.use(flash());
 
 // Set up persistent session data
-app.use((req, res, next) => {
-  if (!"todoLists" in req.session) req.session.todoLists = seedData;
+/*app.use((req, res, next) => {
+  req.session.todoLists = seedData;
   let todoLists = [];
   if ("todoLists" in req.session) {
     req.session.todoLists.forEach(todoList => {
@@ -48,7 +47,11 @@ app.use((req, res, next) => {
   req.session.todoLists = todoLists;
   next();
 });
-
+*/
+app.use((req, res, next) => {
+  res.locals.store = new SessionPersistence(req.session);
+  next();
+});
 // Extract session info
 app.use((req, res, next) => {
   res.locals.flash = req.session.flash;
@@ -81,7 +84,7 @@ app.get("/", (req, res) => {
 app.get("/lists", (req, res) => {
   console.log("In the LISTS route", req.session.todoLists);
   res.render("lists", {
-    todoLists: sortTodoLists(req.session.todoLists),
+    todoLists: res.locals.store.sortedTodoLists()
   });
 });
 
