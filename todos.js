@@ -5,7 +5,6 @@ const session = require("express-session");
 const { body, validationResult } = require("express-validator");
 const TodoList = require("./lib/todolist");
 const Todo = require("./lib/todo");
-const {sortTodos } = require("./lib/sort");
 const store = require("connect-loki");
 const app = express();
 const host = "localhost";
@@ -59,22 +58,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// Find a todo list with the indicated ID. Returns `undefined` if not found.
-// Note that `todoListId` must be numeric.
-const loadTodoList = (todoListId, todoLists) => {
-  return todoLists.find(todoList => todoList.id === todoListId);
-};
-
-// Find a todo with the indicated ID in the indicated todo list. Returns
-// `undefined` if not found. Note that both `todoListId` and `todoId` must be
-// numeric.
-const loadTodo = (todoListId, todoId, todoLists) => {
-  let todoList = loadTodoList(todoListId, todoLists);
-  if (!todoList) return undefined;
-
-  return todoList.todos.find(todo => todo.id === todoId);
-};
-
 // Redirect start page
 app.get("/", (req, res) => {
   res.redirect("/lists");
@@ -82,9 +65,19 @@ app.get("/", (req, res) => {
 
 // Render the list of todo lists
 app.get("/lists", (req, res) => {
-  console.log("In the LISTS route", req.session.todoLists);
+  let store = res.locals.store;
+  let todoLists = store.sortedTodoLists();
+
+  let todosInfo = todoLists.map(todoList => ({
+    countAllTodos: todoList.todos.length,
+    countDoneTodos: todoList.todos.filter(todo => todo.done).length,
+    isDone: store.isDoneTodoList(todoList)
+  }));
+
+
   res.render("lists", {
-    todoLists: res.locals.store.sortedTodoLists()
+    todoLists,
+    todosInfo
   });
 });
 
@@ -129,13 +122,15 @@ app.post("/lists",
 // Render individual todo list and its todos
 app.get("/lists/:todoListId", (req, res, next) => {
   let todoListId = req.params.todoListId;
-  let todoList = loadTodoList(+todoListId, req.session.todoLists);
-  if (todoList === undefined) {
+  const store = res.locals.store;
+  const todoList = store.loadTodoList(+todoListId);
+    if (todoList === undefined) {
     next(new Error("Not found."));
   } else {
-    res.render("list", {
-      todoList: todoList,
-      todos: sortTodos(todoList),
+      res.render("list", {
+      todoList,
+      todos: store.sortedTodos(todoList.todos),
+      isAllTodosDone: store.isDoneTodoList(todoList)
     });
   }
 });
@@ -163,16 +158,16 @@ app.post("/lists/:todoListId/todos/:todoId/toggle", (req, res, next) => {
 // Delete a todo
 app.post("/lists/:todoListId/todos/:todoId/destroy", (req, res, next) => {
   let { todoListId, todoId } = { ...req.params };
-
-  let todoList = loadTodoList(+todoListId, req.session.todoLists);
+  const store = res.locals.store;
+  let todoList = store.loadTodoList(+todoListId);
   if (!todoList) {
     next(new Error("Not found."));
   } else {
-    let todo = loadTodo(+todoListId, +todoId, req.session.todoLists);
+    let todo = store.loadTodo(+todoListId, +todoId);
     if (!todo) {
       next(new Error("Not found."));
     } else {
-      todoList.removeAt(todoList.findIndexOf(todo));
+      store.deleteTodo(todoListId, todoId);
       req.flash("success", "The todo has been deleted.");
       res.redirect(`/lists/${todoListId}`);
     }
@@ -204,7 +199,8 @@ app.post("/lists/:todoListId/todos",
   ],
   (req, res, next) => {
     let todoListId = req.params.todoListId;
-    let todoList = loadTodoList(+todoListId, req.session.todoLists);
+    const store = res.locals.store;
+    let todoList = store.loadTodoList(+todoListId);
     if (!todoList) {
       next(new Error("Not found."));
     } else {
@@ -215,12 +211,12 @@ app.post("/lists/:todoListId/todos",
         res.render("list", {
           flash: req.flash(),
           todoList: todoList,
-          todos: sortTodos(todoList),
+          todos: store.sortedTodos(todoList.todos),
           todoTitle: req.body.todoTitle,
         });
       } else {
         let todo = new Todo(req.body.todoTitle);
-        todoList.add(todo);
+        store.addTodo(todoListId, todo);
         req.flash("success", "The todo has been created.");
         res.redirect(`/lists/${todoListId}`);
       }
@@ -231,7 +227,8 @@ app.post("/lists/:todoListId/todos",
 // Render edit todo list form
 app.get("/lists/:todoListId/edit", (req, res, next) => {
   let todoListId = req.params.todoListId;
-  let todoList = loadTodoList(+todoListId, req.session.todoLists);
+  const store = res.locals.store;
+  let todoList = store.loadTodoList(+todoListId);
   if (!todoList) {
     next(new Error("Not found."));
   } else {
@@ -241,13 +238,14 @@ app.get("/lists/:todoListId/edit", (req, res, next) => {
 
 // Delete todo list
 app.post("/lists/:todoListId/destroy", (req, res, next) => {
-  let todoLists = req.session.todoLists;
+  const store = res.locals.store;
+  let todoLists = store.todoLists;
   let todoListId = +req.params.todoListId;
   let index = todoLists.findIndex(todoList => todoList.id === todoListId);
   if (index === -1) {
     next(new Error("Not found."));
   } else {
-    todoLists.splice(index, 1);
+    store.deleteTodoList(index);
 
     req.flash("success", "Todo list deleted.");
     res.redirect("/lists");
