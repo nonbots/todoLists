@@ -109,7 +109,7 @@ app.post("/lists",
         todoListTitle: req.body.todoListTitle,
       });
     } else {
-      res.locals.store.addTodoList( req.body.todoListTitle);
+      res.locals.store.addTodoList(req.body.todoListTitle);
       console.log("THE TODOLIST ARRAY", req.session.todoLists);
       req.flash("success", "The todo list has been created.");
       res.redirect("/lists");
@@ -119,13 +119,16 @@ app.post("/lists",
 
 // Render individual todo list and its todos
 app.get("/lists/:todoListId", (req, res, next) => {
+  console.log("I AM THE LISTS/TODOLISTID ROUTE");
   let todoListId = req.params.todoListId;
   const store = res.locals.store;
+  console.log("TODOLIST IN STORE", store.todoLists);
+  console.log("IN LISTS: TODOLISTID", todoListId);
   const todoList = store.loadTodoList(+todoListId);
-    if (todoList === undefined) {
+  if (todoList === undefined) {
     next(new Error("Not found."));
   } else {
-      res.render("list", {
+    res.render("list", {
       todoList,
       todos: store.sortedTodos(todoList.todos),
       isAllTodosDone: store.isDoneTodoList(todoList)
@@ -136,9 +139,9 @@ app.get("/lists/:todoListId", (req, res, next) => {
 // Toggle completion status of a todo
 app.post("/lists/:todoListId/todos/:todoId/toggle", (req, res, next) => {
   let { todoListId, todoId } = req.params;
-  const store = res.locals.store
+  const store = res.locals.store;
   let toggledTodo = store.toggleDoneTodo(+todoListId, +todoId);
-  if (!toggledTodo){ 
+  if (!toggledTodo) {
     next(new Error("Not found."));
   } else {
     let todo = store.loadTodo(+todoListId, +todoId);
@@ -174,7 +177,7 @@ app.post("/lists/:todoListId/todos/:todoId/destroy", (req, res, next) => {
 // Mark all todos as done
 app.post("/lists/:todoListId/complete_all", (req, res, next) => {
   let todoListId = req.params.todoListId;
-  const store = res.locals.store
+  const store = res.locals.store;
   let todoList = store.loadTodoList(+todoListId);
   if (!todoList) {
     next(new Error("Not found."));

@@ -1,3 +1,4 @@
+*.yml
 *.swp
 node_modules/
 session-store.db
