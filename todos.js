@@ -8,7 +8,7 @@ const app = express();
 const host = "localhost";
 const port = 3001;
 const LokiStore = store(session);
-const SessionPersistence = require("./lib/session-persistence.js");
+const SessionPersistence = require("./lib/pg-persistence.js");
 app.set("views", "./views");
 app.set("view engine", "pug");
 
@@ -33,6 +33,16 @@ app.use(flash());
 app.use((req, res, next) => {
   res.locals.store = new SessionPersistence(req.session);
   next();
+});
+app.use(async (req, res, next) => {
+  try {
+    //await res.locals.store.testQuery1();
+    //await res.locals.store.testQuery2();
+    await res.locals.store.todoListTitleQuery('Work Todos');
+    res.send("quitting");
+  } catch (error) {
+    next(error);
+  }
 });
 // Extract session info
 app.use((req, res, next) => {
