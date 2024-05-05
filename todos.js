@@ -39,6 +39,8 @@ app.use(async (req, res, next) => {
     //await res.locals.store.testQuery1();
     //await res.locals.store.testQuery2();
     await res.locals.store.todoListTitleQuery('Work Todos');
+    const maliciousCode = "'; UPDATE todos SET done = true WHERE done <> 't";
+    await res.locals.store.todoListTitleQuery(maliciousCode)
     res.send("quitting");
   } catch (error) {
     next(error);
