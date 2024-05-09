@@ -34,10 +34,10 @@ app.use((req, res, next) => {
   res.locals.store = new SessionPersistence(req.session);
   next();
 });
-app.use(async (req, res, next) => {
+/*app.use(async (req, res, next) => {
   try {
-    //await res.locals.store.testQuery1();
-    //await res.locals.store.testQuery2();
+    await res.locals.store.testQuery1();
+    await res.locals.store.testQuery2();
     await res.locals.store.todoListTitleQuery('Work Todos');
     const maliciousCode = "'; UPDATE todos SET done = true WHERE done <> 't";
     await res.locals.store.todoListTitleQuery(maliciousCode)
@@ -46,6 +46,7 @@ app.use(async (req, res, next) => {
     next(error);
   }
 });
+*/
 // Extract session info
 app.use((req, res, next) => {
   res.locals.flash = req.session.flash;
@@ -59,21 +60,24 @@ app.get("/", (req, res) => {
 });
 
 // Render the list of todo lists
-app.get("/lists", (req, res) => {
-  let store = res.locals.store;
-  let todoLists = store.sortedTodoLists();
-
-  let todosInfo = todoLists.map(todoList => ({
-    countAllTodos: todoList.todos.length,
-    countDoneTodos: todoList.todos.filter(todo => todo.done).length,
-    isDone: store.isDoneTodoList(todoList)
-  }));
-
-
-  res.render("lists", {
-    todoLists,
-    todosInfo
-  });
+app.get("/lists", async (req, res, next) => {
+  try {
+    let store = res.locals.store;
+    let todoLists = await store.sortedTodoLists();
+    let todosInfo = todoLists.map( todoList => {
+      return {
+        countAllTodos: todoList.todos.length,
+        countDoneTodos: todoList.todos.filter(todo => todo.done).length,
+        isDone: store.isDoneTodoList(todoList)
+      }
+    });
+    res.render("lists", {
+      todoLists,
+      todosInfo
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
 // Render new todo list page
