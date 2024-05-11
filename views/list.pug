@@ -5,7 +5,7 @@ block main
     header
       h2= todoList.title
       ul
-        if todoList.length > 0 && !isAllTodosDone
+        if todoList.todos.length > 0 && hasUndoneTodos
           li
             form.complete_all(action=`/lists/${todoList.id}/complete_all`
                               method="post")
