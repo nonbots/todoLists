@@ -8,7 +8,7 @@ const app = express();
 const host = "localhost";
 const port = 3001;
 const LokiStore = store(session);
-const SessionPersistence = require("./lib/pg-persistence.js");
+const SessionPersistence = require("./lib/session-persistence.js");
 //const {persistence} = require("./lib/get-config.js");
 //const Persistence = require(persistence);
 const catchError = require("./lib/catch-error");
@@ -196,7 +196,7 @@ app.post("/lists/:todoListId/todos",
       errors.array().forEach(message => req.flash("error", message.msg));
       let todoList = await res.locals.store.loadTodoList(+todoListId);
       if (!todoList) throw new Error("Not found.");
-      todoList.todos = await res.locals.store.sortedTodos(todoList.todos);
+      todoList.todos = await res.locals.store.sortedTodos(todoList);
       res.render("list", {
         flash: req.flash(),
         todoList,
