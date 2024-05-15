@@ -8,7 +8,7 @@ const app = express();
 const host = "localhost";
 const port = 3001;
 const LokiStore = store(session);
-const SessionPersistence = require("./lib/session-persistence.js");
+const PgPersistence = require("./lib/pg-persistence.js");
 //const {persistence} = require("./lib/get-config.js");
 //const Persistence = require(persistence);
 const catchError = require("./lib/catch-error");
@@ -34,7 +34,7 @@ app.use(session({
 
 app.use(flash());
 app.use((req, res, next) => {
-  res.locals.store = new SessionPersistence(req.session);
+  res.locals.store = new PgPersistence(req.session);
   next();
 });
 
