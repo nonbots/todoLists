@@ -50,6 +50,22 @@ app.get("/", (req, res) => {
   res.redirect("/lists");
 });
 
+// Render the signin page
+app.get("/users/signin", (req, res) => {
+  req.flash("info", "Please sign in.");
+  res.render("signin", {flash: req.flash()});
+}); 
+// User signs in 
+app.post("/users/signin", (req, res) => {
+  const username = req.body.username;
+  const password  = req.body.password;
+  if (username === "admin" && password === "secret") {
+    res.redirect("/lists");
+  }else{
+    req.flash("error", "Invalid credentials");
+    res.render("signin", {flash: req.flash()});
+  }
+});
 // Render the list of todo lists
 app.get("/lists", 
   catchError(async (req, res) => {
