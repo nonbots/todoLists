@@ -5,14 +5,15 @@ block main
     header
       h2= todoList.title
       ul
-        if todoList.todos.length > 0 && hasUndoneTodos
+        if todoList.todos.length > 0 && hasUndoneTodos && signedIn
           li
             form.complete_all(action=`/lists/${todoList.id}/complete_all`
                               method="post")
               button.check(type="submit") Complete All
         li
-          form(action=`/lists/${todoList.id}/edit` method="get")
-            button.edit(type="submit") Edit List
+          if siginIn
+            form(action=`/lists/${todoList.id}/edit` method="get")
+              button.edit(type="submit") Edit List
 
     ul
       each todo in todos
@@ -23,21 +24,22 @@ block main
             button Done
 
           h3= todo.title
-          form.delete(action=`/lists/${todoList.id}/todos/${todo.id}/destroy`
-                      method="post")
-            button Delete
+          if signedIn
+            form.delete(action=`/lists/${todoList.id}/todos/${todo.id}/destroy`
+                        method="post")
+              button Delete
 
     form(action=`/lists/${todoList.id}/todos` method="post")
       dl
         dt
           label(for="todoTitle") Enter a new todo item:
-        dd
           input(type="text"
                 name="todoTitle"
                 placeholder="Something to do"
                 value=todoTitle)
-      fieldset.actions
-        button Add
+      if signedIn
+        fieldset.actions
+          button Add
 
 block headerLinks
   .actions

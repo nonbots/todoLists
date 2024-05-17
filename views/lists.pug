@@ -13,5 +13,6 @@ block main
             p #{todoInfo.countDoneTodos} / #{todoInfo.countAllTodos}
 
 block headerLinks
-  .actions
-    a.add(href="/lists/new") New List
+  if signedIn 
+    .actions
+      a.add(href="/lists/new") New List
