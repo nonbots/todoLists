@@ -59,18 +59,19 @@ app.get("/users/signin", (req, res) => {
   res.render("signin"/*, {flash: req.flash()}*/);
 }); 
 // User signs in 
-app.post("/users/signin", (req, res) => {
+app.post("/users/signin", async(req, res) => {
   const username = req.body.username;
   const password  = req.body.password;
-  if (username === "admin" && password === "secret") {
+  const authenicatedUser = await res.locals.store.validateUser(username, password);
+  if (authenicatedUser) {
     req.flash("info", "Welcome!");
+    console.log("SIGN_IN", authenicatedUser);
+    req.session.username = authenicatedUser.username;
     req.session.signedIn = true;
-    req.session.username = username;
     res.redirect("/lists");
   }else{
     req.flash("error", "Invalid credentials");
     res.redirect("/users/signin");
-    //res.render("signin", {flash: req.flash()});
   }
 });
 

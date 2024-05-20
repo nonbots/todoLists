@@ -2,3 +2,4 @@
 *.swp
 node_modules/
 session-store.db
+lib/todolists.sql
