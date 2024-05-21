@@ -42,7 +42,7 @@ app.use((req, res, next) => {
 app.use((req, res, next) => {
   res.locals.signedIn = req.session.signedIn;
   res.locals.username = req.session.username;
-
+  
   res.locals.flash = req.session.flash;
   delete req.session.flash;
   next();
@@ -66,6 +66,8 @@ app.post("/users/signin", async(req, res) => {
   if (authenicatedUser) {
     req.flash("info", "Welcome!");
     console.log("SIGN_IN", authenicatedUser);
+    req.session.userId = authenicatedUser.id;
+    console.log("POST SIGNED IN", req.session.userId);
     req.session.username = authenicatedUser.username;
     req.session.signedIn = true;
     res.redirect("/lists");
@@ -84,6 +86,7 @@ app.post("/users/signout", (req, res) => {
 });
 // Render the list of todo lists
 app.get("/lists", 
+  requireAuth,
   catchError(async (req, res) => {
     let store = res.locals.store;
     let todoLists = await store.sortedTodoLists();
@@ -102,7 +105,7 @@ app.get("/lists",
     });
   })
 );
-function anonUser(req, res, next) {
+function requireAuth(req, res, next) {
   if(!req.session.signedIn) {
     res.redirect("/users/signin");
   }else{
@@ -110,12 +113,12 @@ function anonUser(req, res, next) {
   }
 }
 // Render new todo list page
-app.get("/lists/new", anonUser, (req, res) => {
+app.get("/lists/new", requireAuth, (req, res) => {
   res.render("new-list");
 });
 // Create a new todo list
 app.post("/lists",
-  anonUser,
+  requireAuth,
   [
     body("todoListTitle")
       .trim()
@@ -157,6 +160,7 @@ app.post("/lists",
 
 // Render individual todo list and its todos
 app.get("/lists/:todoListId", 
+  requireAuth,
   catchError(async (req, res) => {
     let todoListId = req.params.todoListId;
     const todoList = await res.locals.store.loadTodoList(+todoListId);
@@ -179,7 +183,7 @@ app.get("/lists/:todoListId",
 
 // Toggle completion status of a todo
 app.post("/lists/:todoListId/todos/:todoId/toggle", 
-  anonUser,
+  requireAuth,
   catchError(async(req, res)=> {
     let { todoListId, todoId } = req.params;
     let toggledTodo = res.locals.store.toggleDoneTodo(+todoListId, +todoId);
@@ -200,7 +204,7 @@ app.post("/lists/:todoListId/todos/:todoId/toggle",
 
 // Delete a todo
 app.post("/lists/:todoListId/todos/:todoId/destroy", 
-  anonUser,
+  requireAuth,
   catchError(async (req, res) => {
     let { todoListId, todoId } = { ...req.params };
     let deleted = res.locals.store.deleteTodo(+todoListId, +todoId);
@@ -213,7 +217,7 @@ app.post("/lists/:todoListId/todos/:todoId/destroy",
 
 // Mark all todos as done
 app.post("/lists/:todoListId/complete_all", 
-  anonUser,
+  requireAuth,
   catchError(async(req, res) => {
     let todoListId = req.params.todoListId;
     let completeAll = await res.locals.store.completeAllTodos(+todoListId);
@@ -224,7 +228,7 @@ app.post("/lists/:todoListId/complete_all",
 );
 // Create a new todo and add it to the specified list
 app.post("/lists/:todoListId/todos",
-  anonUser,
+  requireAuth,
   [
     body("todoTitle")
       .trim()
@@ -260,7 +264,7 @@ app.post("/lists/:todoListId/todos",
 
 // Render edit todo list form
 app.get("/lists/:todoListId/edit", 
-  anonUser, 
+  requireAuth, 
   catchError(async(req, res) => {
     let todoListId = req.params.todoListId;
     let todoList = await res.locals.store.loadTodoList(+todoListId);
@@ -271,7 +275,7 @@ app.get("/lists/:todoListId/edit",
 
 // Delete todo list
 app.post("/lists/:todoListId/destroy", 
-  anonUser,
+  requireAuth,
   catchError(async(req, res) => {
     const todoListId = +req.params.todoListId;
     const deleted = await res.locals.store.deleteTodoList(todoListId);
@@ -283,7 +287,7 @@ app.post("/lists/:todoListId/destroy",
 
 // Edit todo list title
 app.post("/lists/:todoListId/edit",
-  anonUser,
+  requireAuth,
   [
     body("todoListTitle")
       .trim()
