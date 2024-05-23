@@ -96,6 +96,7 @@ app.get(
   catchError(async (req, res) => {
     let store = res.locals.store;
     let todoLists = await store.sortedTodoLists();
+    console.log("IN GET ROUTE", todoLists);
     let todosInfo = todoLists.map((todoList) => {
       return {
         countAllTodos: todoList.todos.length,

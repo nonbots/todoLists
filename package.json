@@ -8,7 +8,8 @@
   },
   "scripts": {
     "start": "npx nodemon todos.js",
-    "test": "jest"
+    "test": "jest",
+    "prettier": "npx prettier . --write"
   },
   "author": "",
   "license": "ISC",
