@@ -18,7 +18,8 @@
     "eslint": "^7.12.1",
     "eslint-cli": "^1.1.1",
     "jest": "^29.7.0",
-    "nodemon": "^1.19.4"
+    "nodemon": "^1.19.4",
+    "prettier": "3.2.5"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
