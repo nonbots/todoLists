@@ -3,12 +3,7 @@
 
 name: Node.js CI
 
-on:
-  push:
-    branches: [ "main", "multi-users" ]
-  pull_request:
-    branches: [ "main", "multi-users" ]
-
+on: [push]
 jobs:
   build:
 
