@@ -12,7 +12,7 @@ const PgPersistence = require("./lib/pg-persistence.js");
 //const {persistence} = require("./lib/get-config.js");
 //const Persistence = require(persistence);
 const catchError = require("./lib/catch-error");
-const {getClient} = require("./lib/db-connect");
+const { getClient } = require("./lib/db-connect");
 app.set("views", "./views");
 app.set("view engine", "pug");
 
@@ -37,8 +37,8 @@ app.use(
 
 app.use(flash());
 app.use(async (req, res, next) => {
-    res.locals.store = new PgPersistence(await getClient(), req.session);
-    next();
+  res.locals.store = new PgPersistence(await getClient(), req.session);
+  next();
 });
 
 // Extract session info
