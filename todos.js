@@ -36,9 +36,9 @@ app.use(
 );
 
 app.use(flash());
-app.use((req, res, next) => {
-  res.locals.store = new PgPersistence(getClient(), req.session);
-  next();
+app.use(async (req, res, next) => {
+    res.locals.store = new PgPersistence(await getClient(), req.session);
+    next();
 });
 
 // Extract session info
